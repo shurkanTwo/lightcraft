@@ -1193,6 +1193,11 @@ fn histogram_corners_toggle_clipping_warnings() {
     }
     h.step();
     h.app.ui.show_clipping = false;
+    let histogram = h.app.widgets.iter().find(|(id, _)| id == "histogram").unwrap().1;
+    for id in ["histogram:shadows", "histogram:highlights"] {
+        let rect = h.app.widgets.iter().find(|(widget, _)| widget == id).unwrap().1;
+        assert!(histogram.shrink(8.0).contains_rect(rect), "{id} keeps clear space to the histogram edges: {rect:?} in {histogram:?}");
+    }
     for (id, enabled) in [("histogram:shadows", true), ("histogram:highlights", false), ("histogram", true)] {
         let r = h.request("ui.clickWidget", json!({"id": id}), T);
         assert_eq!(r["ok"], true, "{r}");

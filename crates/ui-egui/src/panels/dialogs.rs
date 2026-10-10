@@ -406,7 +406,8 @@ pub fn show(app: &mut LightcraftApp, ctx: &egui::Context) {
                             egui::Grid::new("rename-preview").num_columns(3).spacing([8.0, 2.0]).show(ui, |ui| {
                                 for pl in rows {
                                     ui.label(egui::RichText::new(&pl.from).color(t.text_dim));
-                                    ui.label(egui::RichText::new("→").color(t.text_dim));
+                                    let (arrow, _) = ui.allocate_exact_size(egui::vec2(16.0, 16.0), egui::Sense::hover());
+                                    crate::icons::paint(ui.painter(), arrow, crate::icons::Icon::ChevronRight, t.text_dim);
                                     ui.label(egui::RichText::new(&pl.to).color(t.text));
                                     ui.end_row();
                                 }

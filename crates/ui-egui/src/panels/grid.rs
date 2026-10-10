@@ -748,10 +748,15 @@ fn folder_breadcrumbs(app: &mut LightcraftApp, ui: &mut egui::Ui, path: &str) {
     // Prefer the current folder, showing more ancestors as space permits.
     let visible = ((ui.available_width() / 80.0) as usize).clamp(1, 4);
     let skip = parts.len().saturating_sub(visible);
+    let separator = |ui: &mut egui::Ui| {
+        let (r, _) = ui.allocate_exact_size(vec2(16.0, 24.0), Sense::hover());
+        paint(ui.painter(), Rect::from_center_size(r.center(), vec2(16.0, 16.0)), Icon::ChevronRight, t.text_dim);
+    };
     if skip > 0 {
-        ui.label(egui::RichText::new("…  ›").color(t.text_dim)).on_hover_text(path);
+        ui.label(egui::RichText::new("…").color(t.text_dim)).on_hover_text(path);
+        separator(ui);
     }
-    let separator_w = ui.painter().layout_no_wrap("›".into(), t.font(13.0), t.text_dim).size().x + 8.0;
+    let separator_w = 16.0 + 2.0 * ui.spacing().item_spacing.x;
     for (i, part) in parts.iter().enumerate().skip(skip) {
         let remaining = parts.len() - i;
         let last = remaining == 1;
@@ -769,7 +774,7 @@ fn folder_breadcrumbs(app: &mut LightcraftApp, ui: &mut egui::Ui, path: &str) {
             {
                 let _ = app.run("library.browse", json!({"path": to}));
             }
-            ui.label(egui::RichText::new("›").size(13.0).color(t.text_dim));
+            separator(ui);
         }
         r.on_hover_text(path);
     }

@@ -248,7 +248,10 @@ pub fn contributors_ui(app: &mut LightcraftApp, ui: &mut egui::Ui) {
                 }
             }
         });
-        if ui.button(if v.ascending { "▲" } else { "▼" }).on_hover_text(crate::i18n::tr("Reverse the order")).clicked() {
+        let reverse =
+            crate::widgets::arrow_button(ui, "", if v.ascending { crate::icons::Icon::ChevronUp } else { crate::icons::Icon::ChevronDown }, false);
+        reverse.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, ui.is_enabled(), crate::i18n::tr("Reverse the order")));
+        if reverse.on_hover_text(crate::i18n::tr("Reverse the order")).clicked() {
             v.ascending = !v.ascending;
         }
         ui.separator();
@@ -288,12 +291,18 @@ pub fn contributors_ui(app: &mut LightcraftApp, ui: &mut egui::Ui) {
 fn table(app: &mut LightcraftApp, ui: &mut egui::Ui, list: &[&Contributor], v: &mut View) {
     egui::Grid::new("credits_table").striped(true).num_columns(SortKey::ALL.len()).show(ui, |ui| {
         for k in SortKey::ALL {
-            let arrow = if v.key == k { if v.ascending { " ▲" } else { " ▼" } } else { "" };
-            if ui
-                .button(RichText::new(format!("{}{arrow}", crate::i18n::tr(k.label().1))).strong())
-                .on_hover_text(crate::i18n::tr(k.label().0))
-                .clicked()
-            {
+            let text = RichText::new(crate::i18n::tr(k.label().1)).strong();
+            let header = if v.key == k {
+                crate::widgets::arrow_button(
+                    ui,
+                    text,
+                    if v.ascending { crate::icons::Icon::ChevronUp } else { crate::icons::Icon::ChevronDown },
+                    false,
+                )
+            } else {
+                ui.button(text)
+            };
+            if header.on_hover_text(crate::i18n::tr(k.label().0)).clicked() {
                 if v.key == k {
                     v.ascending = !v.ascending;
                 } else {

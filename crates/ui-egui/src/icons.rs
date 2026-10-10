@@ -45,6 +45,8 @@ pub enum Icon {
     ChevronRight,
     ChevronLeft,
     ChevronUp,
+    ChevronDoubleLeft,
+    ChevronDoubleRight,
     Plus,
     Minus,
     Album,
@@ -146,7 +148,17 @@ fn star_pts(cx: f32, cy: f32, r: f32) -> Vec<(f32, f32)> {
 pub fn paint(p: &Painter, rect: Rect, icon: Icon, color: Color32) {
     let side = rect.width().min(rect.height());
     // All disclosure and navigation chevrons share a 16-point size and stroke.
-    let side = if matches!(icon, Icon::Back | Icon::Forward | Icon::ChevronDown | Icon::ChevronUp | Icon::ChevronLeft | Icon::ChevronRight) {
+    let side = if matches!(
+        icon,
+        Icon::Back
+            | Icon::Forward
+            | Icon::ChevronDown
+            | Icon::ChevronUp
+            | Icon::ChevronLeft
+            | Icon::ChevronRight
+            | Icon::ChevronDoubleLeft
+            | Icon::ChevronDoubleRight
+    ) {
         side.min(16.0)
     } else {
         side
@@ -325,6 +337,14 @@ pub fn paint(p: &Painter, rect: Rect, icon: Icon, color: Color32) {
         ChevronDown => pen.line(&[(5.0, 7.5), (10.0, 12.5), (15.0, 7.5)]),
         Forward | ChevronRight => pen.line(&[(7.5, 5.0), (12.5, 10.0), (7.5, 15.0)]),
         Back | ChevronLeft => pen.line(&[(12.5, 5.0), (7.5, 10.0), (12.5, 15.0)]),
+        ChevronDoubleLeft => {
+            pen.line(&[(9.0, 5.0), (4.0, 10.0), (9.0, 15.0)]);
+            pen.line(&[(16.0, 5.0), (11.0, 10.0), (16.0, 15.0)]);
+        }
+        ChevronDoubleRight => {
+            pen.line(&[(4.0, 5.0), (9.0, 10.0), (4.0, 15.0)]);
+            pen.line(&[(11.0, 5.0), (16.0, 10.0), (11.0, 15.0)]);
+        }
         ChevronUp => pen.line(&[(5.0, 12.5), (10.0, 7.5), (15.0, 12.5)]),
         Plus => {
             pen.line(&[(10.0, 4.0), (10.0, 16.0)]);

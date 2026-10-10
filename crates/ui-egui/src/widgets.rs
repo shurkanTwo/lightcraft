@@ -15,6 +15,23 @@ pub fn combo_box(id: impl egui::AsIdSalt) -> egui::ComboBox {
     })
 }
 
+/// A native button with a vector arrow beside its text; egui reserves the icon's space.
+pub fn arrow_button<'a>(ui: &mut Ui, text: impl egui::IntoAtoms<'a>, icon: Icon, leading: bool) -> Response {
+    let id = ui.next_auto_id().with("arrow");
+    let mut atoms = text.into_atoms();
+    let arrow = egui::Atom::custom(id, vec2(16.0, 16.0));
+    if leading {
+        atoms.push_left(arrow);
+    } else {
+        atoms.push_right(arrow);
+    }
+    let r = egui::Button::new(atoms).atom_ui(ui);
+    if let Some(rect) = r.rect(id) {
+        paint(ui.painter(), rect, icon, ui.style().interact(&r.response).fg_stroke.color);
+    }
+    r.response
+}
+
 /// Keep egui's submenu interaction and layout, using our vector chevron instead of a font glyph.
 pub fn menu_button<'a, R>(ui: &mut Ui, atoms: impl egui::IntoAtoms<'a>, contents: impl FnOnce(&mut Ui) -> R) -> egui::InnerResponse<Option<R>> {
     if !egui::containers::menu::is_in_menu(ui) {

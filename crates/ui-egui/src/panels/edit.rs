@@ -552,17 +552,19 @@ fn histogram(app: &mut LightcraftApp, ui: &mut egui::Ui, id: PhotoId) {
     }
     let mut clicked = resp.clicked();
     for (name, x, label, clipped) in [
-        ("shadows", plot.left() + 14.0, "Shadow clipping", clipping.map(|(lo, _)| lo > 0.003)),
-        ("highlights", plot.right() - 14.0, "Highlight clipping", clipping.map(|(_, hi)| hi > 0.003)),
+        ("shadows", plot.left() + 20.0, "Shadow clipping", clipping.map(|(lo, _)| lo > 0.003)),
+        ("highlights", plot.right() - 20.0, "Highlight clipping", clipping.map(|(_, hi)| hi > 0.003)),
     ] {
-        let rect = Rect::from_center_size(pos2(x, plot.top() + 12.0), vec2(24.0, 22.0));
+        let rect = Rect::from_center_size(pos2(x, plot.top() + 14.0), vec2(24.0, 22.0));
         let response = ui.interact(rect, ui.id().with(("histogram-clipping", name)), Sense::click());
         register(ui.ctx(), format!("histogram:{name}"), rect);
         response.widget_info(|| egui::WidgetInfo::selected(egui::WidgetType::Button, ui.is_enabled(), app.ui.show_clipping, crate::i18n::tr(label)));
         clicked |= response.clicked();
         let active = app.ui.show_clipping;
+        // Keep the hit target comfortable, with a smaller box and clear space to the plot edges.
+        let box_rect = rect.shrink2(vec2(2.0, 2.0));
         p.rect_filled(
-            rect,
+            box_rect,
             3.0,
             if active {
                 t.pressed
@@ -573,9 +575,14 @@ fn histogram(app: &mut LightcraftApp, ui: &mut egui::Ui, id: PhotoId) {
             },
         );
         if active {
-            p.rect_stroke(rect, 3.0, Stroke::new(1.0, t.text), egui::StrokeKind::Inside);
+            p.rect_stroke(box_rect, 3.0, Stroke::new(1.0, t.text), egui::StrokeKind::Inside);
         }
-        paint(p, rect.shrink2(vec2(4.0, 3.0)), Icon::ChevronDown, if clipped == Some(true) || active { t.text } else { t.text_dim });
+        paint(
+            p,
+            Rect::from_center_size(rect.center(), vec2(16.0, 16.0)),
+            Icon::ChevronDown,
+            if clipped == Some(true) || active { t.text } else { t.text_dim },
+        );
         let status = match clipped {
             Some(true) => "Clipping detected in this preview.",
             Some(false) => "No clipping detected in this preview.",
@@ -1240,8 +1247,21 @@ fn quick_develop(app: &mut LightcraftApp, ui: &mut egui::Ui, n: usize) {
         egui::Grid::new("quick-develop").num_columns(5).spacing([4.0, 3.0]).show(ui, |ui| {
             for (label, ctl, small, big) in rows {
                 ui.label(egui::RichText::new(crate::i18n::tr(label)).size(11.5).color(t.text_dim));
-                for (txt, d) in [("◀◀", -big), ("◀", -small), ("▶", small), ("▶▶", big)] {
-                    let r = ui.add(egui::Button::new(egui::RichText::new(txt).size(10.0)).min_size(egui::vec2(28.0, 18.0)));
+                // Keep the existing automation ids while drawing all step arrows as vectors.
+                for (txt, icon, d) in [
+                    ("◀◀", Icon::ChevronDoubleLeft, -big),
+                    ("◀", Icon::ChevronLeft, -small),
+                    ("▶", Icon::ChevronRight, small),
+                    ("▶▶", Icon::ChevronDoubleRight, big),
+                ] {
+                    let r = crate::widgets::arrow_button(ui, "", icon, false);
+                    r.widget_info(|| {
+                        egui::WidgetInfo::labeled(
+                            egui::WidgetType::Button,
+                            ui.is_enabled(),
+                            crate::i18n::tr_format!("{label} {d:+} on every selected photo", d = d, label = crate::i18n::tr(label)),
+                        )
+                    });
                     crate::widgets::register(ui.ctx(), format!("button:quick-{ctl}-{txt}"), r.rect);
                     if r.on_hover_text(crate::i18n::tr_format!("{label} {d:+} on every selected photo", d = d, label = crate::i18n::tr(label)))
                         .clicked()
