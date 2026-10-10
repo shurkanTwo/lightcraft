@@ -133,22 +133,17 @@ fn row_sensed(
     resp
 }
 
-/// The disclosure triangle at the left of a tree row (`indent` is the row's): right-pointing
+/// The disclosure chevron at the left of a tree row (`indent` is the row's): right-pointing
 /// when closed, down when open, registered as widget `widget` for the control channel. Returns
 /// its response: the caller flips the open state on `clicked()`.
-fn disclosure_triangle(ui: &mut egui::Ui, row: &egui::Response, indent: f32, open: bool, id: egui::Id, widget: String) -> egui::Response {
+fn disclosure_chevron(ui: &mut egui::Ui, row: &egui::Response, indent: f32, open: bool, id: egui::Id, widget: String) -> egui::Response {
     let t = Tokens::get(ui.ctx());
     let c = pos2(row.rect.left() + 10.0 + indent, row.rect.center().y);
-    let tri = Rect::from_center_size(c, vec2(14.0, 14.0));
+    let tri = Rect::from_center_size(c, vec2(16.0, 16.0));
     let tr = ui.interact(tri, id, Sense::click());
     register(ui.ctx(), widget, tri);
     let col = if tr.hovered() { t.text } else { t.text_dim };
-    let pts = if open {
-        vec![c + vec2(-4.0, -2.0), c + vec2(4.0, -2.0), c + vec2(0.0, 3.0)]
-    } else {
-        vec![c + vec2(-2.0, -4.0), c + vec2(3.0, 0.0), c + vec2(-2.0, 4.0)]
-    };
-    ui.painter().add(egui::Shape::convex_polygon(pts, col, egui::Stroke::NONE));
+    paint(ui.painter(), Rect::from_center_size(c, vec2(16.0, 16.0)), if open { Icon::ChevronDown } else { Icon::ChevronRight }, col);
     tr
 }
 
@@ -168,12 +163,7 @@ fn sidebar_section_header(app: &mut LightcraftApp, ui: &mut egui::Ui, id: &str, 
     let text = ui.painter().text(pos2(r.left() + 18.0, r.center().y), Align2::LEFT_CENTER, title, t.semibold(13.5), t.text_label);
     let c = pos2(text.right() + 10.0, r.center().y);
     let col = if resp.hovered() { t.text } else { t.text_dim };
-    let pts = if open {
-        vec![c + vec2(-4.0, -2.0), c + vec2(4.0, -2.0), c + vec2(0.0, 3.0)]
-    } else {
-        vec![c + vec2(-2.0, -4.0), c + vec2(3.0, 0.0), c + vec2(-2.0, 4.0)]
-    };
-    ui.painter().add(egui::Shape::convex_polygon(pts, col, egui::Stroke::NONE));
+    paint(ui.painter(), Rect::from_center_size(c, vec2(16.0, 16.0)), if open { Icon::ChevronDown } else { Icon::ChevronRight }, col);
     (r, open)
 }
 
@@ -598,7 +588,7 @@ fn folder_tree(
         }
     }
     let resp = row(app, ui, &format!("local:{path}"), Icon::Folder, name, None, sel, indent + 12.0).on_hover_text(path);
-    let tr = disclosure_triangle(ui, &resp, indent, open, egui::Id::new(("folder-tri", path.to_string())), format!("folderToggle:{path}"));
+    let tr = disclosure_chevron(ui, &resp, indent, open, egui::Id::new(("folder-tri", path.to_string())), format!("folderToggle:{path}"));
     if tr.clicked() {
         open = !open;
         ui.data_mut(|d| d.insert_temp(open_id, open));
@@ -666,7 +656,7 @@ fn date_row(app: &mut LightcraftApp, ui: &mut egui::Ui, key: &str, label: &str, 
     let sel = app.session.filter.date.as_deref() == Some(key);
     let resp = row(app, ui, &format!("date:{key}"), Icon::Clock, label, Some(count), sel, indent);
     if key.len() < 10 {
-        let tr = disclosure_triangle(ui, &resp, indent, open, egui::Id::new(("date-tri", key.to_string())), format!("dateToggle:{key}"));
+        let tr = disclosure_chevron(ui, &resp, indent, open, egui::Id::new(("date-tri", key.to_string())), format!("dateToggle:{key}"));
         if tr.clicked() {
             open = !open;
             ui.data_mut(|d| d.insert_temp(open_id, open));
@@ -715,7 +705,7 @@ fn albums_tree(app: &mut LightcraftApp, ui: &mut egui::Ui, all: &AlbumKids, pare
             }
             let mut toggled = resp.clicked();
             if has_children {
-                let tri = disclosure_triangle(ui, &resp, indent, open, egui::Id::new(("album-tri", a.id.0)), format!("albumToggle:{}", a.id.0));
+                let tri = disclosure_chevron(ui, &resp, indent, open, egui::Id::new(("album-tri", a.id.0)), format!("albumToggle:{}", a.id.0));
                 toggled |= tri.clicked();
                 // the triangle sits on the row and takes its clicks: the menu opens from it too
                 folder_menu(app, &tri, a);
@@ -1030,7 +1020,7 @@ fn folder_menu(app: &mut LightcraftApp, resp: &egui::Response, a: &Album) {
     resp.context_menu(|ui| {
         if a.folder {
             // the same commands as File ▸ New…, aimed at this folder
-            ui.menu_button(crate::i18n::tr("New"), |ui| {
+            crate::widgets::menu_button(ui, crate::i18n::tr("New"), |ui| {
                 for (label, command) in [
                     ("Create Album…", "dialog.newAlbum"),
                     ("Create Smart Album…", "dialog.smartAlbum"),
@@ -1089,7 +1079,7 @@ fn folder_menu(app: &mut LightcraftApp, resp: &egui::Response, a: &Album) {
                 let _ = app.run("dialog.export", json!({}));
             }
             ui.add_enabled_ui(has_photos, |ui| {
-                ui.menu_button(crate::i18n::tr("Export Album with Preset"), |ui| {
+                crate::widgets::menu_button(ui, crate::i18n::tr("Export Album with Preset"), |ui| {
                     for (p, _) in app.session.all_export_presets() {
                         if ui.button(&p.name).clicked() {
                             show_all(app);
@@ -1106,7 +1096,7 @@ fn folder_menu(app: &mut LightcraftApp, resp: &egui::Response, a: &Album) {
         let mut folders: Vec<(u64, String)> =
             app.session.catalog.albums().filter(|f| f.folder && !is_within(app, f.id, a.id)).map(|f| (f.id.0, f.name.clone())).collect();
         folders.sort_by_key(|(_, n)| n.to_lowercase());
-        ui.menu_button(crate::i18n::tr("Move to"), |ui| {
+        crate::widgets::menu_button(ui, crate::i18n::tr("Move to"), |ui| {
             if ui.add_enabled(a.parent.is_some(), egui::Button::new(crate::i18n::tr("Top Level"))).clicked() {
                 let _ = app.run("album.move", json!({"id": a.id.0, "parent": null}));
             }
@@ -1214,7 +1204,7 @@ fn folder_rows(app: &mut LightcraftApp, ui: &mut egui::Ui, nodes: &[FolderNode],
         let resp = row_sensed(app, ui, &id, Icon::Folder, &name, Some(&spoken), Some(n.count), sel, indent, Sense::click(), mark);
         let mut toggled = false;
         if !n.children.is_empty() {
-            let tr = disclosure_triangle(ui, &resp, indent, open, egui::Id::new(("libfolder-tri", key)), format!("libraryFolderToggle:{}", n.path));
+            let tr = disclosure_chevron(ui, &resp, indent, open, egui::Id::new(("libfolder-tri", key)), format!("libraryFolderToggle:{}", n.path));
             toggled = tr.clicked();
             tr.widget_info(|| {
                 egui::WidgetInfo::labeled(egui::WidgetType::Button, true, if open { crate::i18n::tr("Collapse") } else { crate::i18n::tr("Expand") })
@@ -1284,7 +1274,7 @@ fn synchronize_item(app: &mut LightcraftApp, ui: &mut egui::Ui, n: &FolderNode, 
 /// Set Color Label ▸ of a Folders row (`folder.label`; the submenu is widget `folderLabelMenu`,
 /// its colours `folderLabel:<colour>`).
 fn folder_label_menu(app: &mut LightcraftApp, ui: &mut egui::Ui, n: &FolderNode) {
-    let menu = ui.menu_button(crate::i18n::tr("Set Color Label"), |ui| {
+    let menu = crate::widgets::menu_button(ui, crate::i18n::tr("Set Color Label"), |ui| {
         if let Some(l) = crate::panels::grid::label_items(app, ui, n.label, "folderLabel") {
             if let Err(e) = app.run("folder.label", json!({"path": n.path, "label": crate::panels::grid::label_param(l)})) {
                 app.toast(ui.ctx(), e);
@@ -1367,7 +1357,7 @@ fn keyword_rows(app: &mut LightcraftApp, ui: &mut egui::Ui, nodes: &[KeywordNode
         let resp = row(app, ui, &format!("keyword:{}", n.path), Icon::Tag, &n.name, Some(n.count), sel, indent);
         if !n.children.is_empty() {
             let tr =
-                disclosure_triangle(ui, &resp, indent, open, egui::Id::new(("kw-tri", n.path.to_lowercase())), format!("keywordToggle:{}", n.path));
+                disclosure_chevron(ui, &resp, indent, open, egui::Id::new(("kw-tri", n.path.to_lowercase())), format!("keywordToggle:{}", n.path));
             if tr.clicked() {
                 open = !open;
                 ui.data_mut(|d| d.insert_temp(open_id, open));

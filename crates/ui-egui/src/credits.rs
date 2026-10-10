@@ -240,7 +240,7 @@ pub fn contributors_ui(app: &mut LightcraftApp, ui: &mut egui::Ui) {
         }
         ui.separator();
         ui.label(crate::i18n::tr("Sort"));
-        egui::ComboBox::from_id_salt("credits_sort").selected_text(crate::i18n::tr(v.key.label().0)).show_ui(ui, |ui| {
+        crate::widgets::combo_box("credits_sort").selected_text(crate::i18n::tr(v.key.label().0)).show_ui(ui, |ui| {
             for k in SortKey::ALL {
                 if ui.selectable_label(v.key == k, crate::i18n::tr(k.label().0)).clicked() {
                     v.key = k;

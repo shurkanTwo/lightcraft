@@ -898,22 +898,22 @@ pub fn context_menu(app: &mut LightcraftApp, ui: &mut egui::Ui, id: PhotoId) {
         let _ = app.run("photo.setReference", json!({"id": id.0}));
     }
     ui.separator();
-    ui.menu_button(crate::i18n::tr("Set Rating"), |ui| {
+    crate::widgets::menu_button(ui, crate::i18n::tr("Set Rating"), |ui| {
         for r in 0..=5 {
             if ui.button(if r == 0 { crate::i18n::tr("No Stars").to_string() } else { "★".repeat(r) }).clicked() {
                 let _ = app.run("photo.rate", json!({"rating": r}));
             }
         }
     });
-    ui.menu_button(crate::i18n::tr("Set Flag"), |ui| {
+    crate::widgets::menu_button(ui, crate::i18n::tr("Set Flag"), |ui| {
         for (l, f) in [("Pick", "pick"), ("Reject", "reject"), ("Unflagged", "none")] {
             if ui.button(l).clicked() {
                 let _ = app.run("photo.flag", json!({"flag": f}));
             }
         }
     });
-    ui.menu_button(crate::i18n::tr("Set Color Label"), |ui| label_menu(app, ui));
-    ui.menu_button(crate::i18n::tr("Add to Album"), |ui| {
+    crate::widgets::menu_button(ui, crate::i18n::tr("Set Color Label"), |ui| label_menu(app, ui));
+    crate::widgets::menu_button(ui, crate::i18n::tr("Add to Album"), |ui| {
         let albums: Vec<_> = app.session.catalog.albums().filter(|a| !a.folder && !a.is_smart()).map(|a| (a.id.0, a.name.clone())).collect();
         for (aid, name) in albums {
             if ui.button(name).clicked() {
@@ -944,7 +944,7 @@ pub fn context_menu(app: &mut LightcraftApp, ui: &mut egui::Ui, id: PhotoId) {
     if ui.button(crate::i18n::tr("Create Version")).clicked() {
         let _ = app.run("version.create", json!({}));
     }
-    ui.menu_button(crate::i18n::tr("Stack"), |ui| {
+    crate::widgets::menu_button(ui, crate::i18n::tr("Stack"), |ui| {
         let stacked = app.session.catalog.stack_of(id).is_some();
         let several = app.session.selection.ids.len() > 1;
         for (label, cmd, on) in [
@@ -979,7 +979,7 @@ pub fn context_menu(app: &mut LightcraftApp, ui: &mut egui::Ui, id: PhotoId) {
     if ui.button(crate::i18n::tr("Reset Edits")).clicked() {
         let _ = app.run("develop.reset", json!({}));
     }
-    ui.menu_button(crate::i18n::tr("Photo Merge"), |ui| {
+    crate::widgets::menu_button(ui, crate::i18n::tr("Photo Merge"), |ui| {
         let n = app.session.targets(&json!({})).len();
         for (id, label) in [("dialog.mergeHdr", "HDR…"), ("dialog.mergePanorama", "Panorama…"), ("dialog.mergeHdrPanorama", "HDR Panorama…")] {
             if ui.add_enabled(n >= 2, egui::Button::new(label)).clicked() {
@@ -1007,7 +1007,7 @@ pub fn context_menu(app: &mut LightcraftApp, ui: &mut egui::Ui, id: PhotoId) {
     if ui.button(crate::i18n::tr("Export…")).clicked() {
         let _ = app.run("dialog.export", json!({}));
     }
-    ui.menu_button(crate::i18n::tr("Export with Preset"), |ui| {
+    crate::widgets::menu_button(ui, crate::i18n::tr("Export with Preset"), |ui| {
         for (p, _) in app.session.all_export_presets() {
             if ui.button(&p.name).clicked() {
                 match app.run("app.export", json!({"preset": p.name, "background": true})) {

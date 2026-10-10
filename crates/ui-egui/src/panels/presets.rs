@@ -94,7 +94,7 @@ pub fn show(app: &mut LightcraftApp, ui: &mut egui::Ui) {
                     register(ui.ctx(), format!("presetGroup:{g}"), r);
                     paint(
                         ui.painter(),
-                        Rect::from_center_size(pos2(r.left() + 22.0, r.center().y), vec2(12.0, 12.0)),
+                        Rect::from_center_size(pos2(r.left() + 22.0, r.center().y), vec2(16.0, 16.0)),
                         if open { Icon::ChevronDown } else { Icon::ChevronRight },
                         t.text_label,
                     );
@@ -142,7 +142,7 @@ pub fn show(app: &mut LightcraftApp, ui: &mut egui::Ui) {
                         if fav {
                             paint(
                                 ui.painter(),
-                                Rect::from_center_size(pos2(r.right() - 20.0, r.center().y), vec2(12.0, 12.0)),
+                                Rect::from_center_size(pos2(r.right() - 20.0, r.center().y), vec2(16.0, 16.0)),
                                 Icon::StarFilled,
                                 t.star,
                             );
@@ -192,7 +192,7 @@ pub fn show(app: &mut LightcraftApp, ui: &mut egui::Ui) {
                                     "name",
                                 );
                             }
-                            ui.menu_button(crate::i18n::tr("Move to Group"), |ui| {
+                            crate::widgets::menu_button(ui, crate::i18n::tr("Move to Group"), |ui| {
                                 let mut groups: Vec<String> = app.session.presets.iter().filter(|p| !p.builtin).map(|p| p.group.clone()).collect();
                                 groups.sort();
                                 groups.dedup();
